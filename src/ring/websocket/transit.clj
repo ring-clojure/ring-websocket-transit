@@ -41,14 +41,22 @@
         (wsp/on-ping listener (wrap-socket socket) data)
         (wsp/-ping socket data)))))
 
-(defn websocket-transit-response [response]
+(defn websocket-transit-response
+  "Wraps a Ring WebSocket response such that incoming and outgoing messages
+  are formatted using Transit. See: wrap-websocket-transit."
+  [response]
   (if (contains? response :ring.websocket/listener)
     (-> response
         (update :ring.websocket/listener wrap-listener)
         (update :ring.websocket/protocol #(or % "transit+json")))
     response))
 
-(defn wrap-websocket-transit [handler]
+(defn wrap-websocket-transit
+  "Ring middleware that translates incoming and outgoing WebSocket messages
+  using the Transit data format. The ring.websocket.protocols/on-message
+  method will receive data decoded from Transit, and the ring.websocket/send
+  function will send data encoded into Transit."
+  [handler]
   (fn
     ([request]
      (websocket-transit-response (handler request)))
