@@ -43,7 +43,9 @@
 
 (defn websocket-transit-response [response]
   (if (contains? response :ring.websocket/listener)
-    (update response :ring.websocket/listener wrap-listener)
+    (-> response
+        (update :ring.websocket/listener wrap-listener)
+        (update :ring.websocket/protocol #(or % "transit+json")))
     response))
 
 (defn wrap-websocket-transit [handler]
