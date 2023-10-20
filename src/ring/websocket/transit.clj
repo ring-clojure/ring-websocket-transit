@@ -28,7 +28,13 @@
     (on-open [_ socket]
       (wsp/on-open listener (wrap-socket socket)))
     (on-message [_ socket message]
-      (wsp/on-message listener (wrap-socket socket) (<-transit message)))
+      (let [socket     (wrap-socket socket)
+            [ok? data] (try
+                         [true (<-transit message)]
+                         (catch Exception ex [false ex]))]
+        (if ok?
+          (wsp/on-message listener socket data)
+          (wsp/on-error listener socket data))))
     (on-pong [_ socket data]
       (wsp/on-pong listener (wrap-socket socket) data))
     (on-error [_ socket throwable]

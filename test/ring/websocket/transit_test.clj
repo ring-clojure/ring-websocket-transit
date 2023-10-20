@@ -99,4 +99,19 @@
                        :ring.websocket/protocol "custom"}))
           response (handler {})]
       (is (= "custom"
-             (:ring.websocket/protocol response))))))
+             (:ring.websocket/protocol response)))))
+  (testing "parsing exceptions trigger on-error"
+    (let [log      (atom [])
+          socket   (reify wsp/Socket)
+          handler  (wst/wrap-websocket-transit
+                    (fn [_]
+                      {:ring.websocket/listener
+                       (reify wsp/Listener
+                         (on-message [_ _ mesg]
+                           (swap! log conj [:listener/message mesg]))
+                         (on-error [_ _ ex]
+                           (swap! log conj [:listener/error ex])))}))
+          listener (:ring.websocket/listener (handler {}))]
+      (wsp/on-message listener socket "[\"~#'\",\"~u:a\"]")
+      (is (= 1 (count @log)))
+      (is (= :listener/error (ffirst @log))))))
