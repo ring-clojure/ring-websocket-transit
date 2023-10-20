@@ -14,23 +14,30 @@
     (let [log      (atom [])
           socket   (reify wsp/Socket
                      (-send [_ mesg]
-                       (swap! log conj [:socket/message mesg])))
+                       (swap! log conj [:socket/message mesg]))
+                     wsp/AsyncSocket
+                     (-send-async [_ mesg succeed _fail]
+                       (swap! log conj [:socket/message mesg])
+                       (succeed)))
           handler  (wst/wrap-websocket-transit
                     (fn [_]
                       {:ring.websocket/listener
                        (reify wsp/Listener
                          (on-open [_ sock]
-                           (wsp/-send sock {:x 1}))
+                           (wsp/-send-async sock {:x 1}
+                                            #(wsp/-send sock {:y 2})
+                                            prn))
                          (on-message [_ _ mesg]
                            (swap! log conj [:listener/message mesg]))
                          (on-close [_ _ code reason]
                            (swap! log conj [:listener/close code reason])))}))
           listener (:ring.websocket/listener (handler {}))]
       (wsp/on-open listener socket)
-      (wsp/on-message listener socket (->transit {:y 2}))
+      (wsp/on-message listener socket (->transit {:z 3}))
       (wsp/on-close listener socket 1000 "Normal Closure")
       (is (= [[:socket/message (->transit {:x 1})]
-              [:listener/message {:y 2}]
+              [:socket/message (->transit {:y 2})]
+              [:listener/message {:z 3}]
               [:listener/close 1000 "Normal Closure"]]
              @log))))
   (testing "socket forwards methods"
@@ -66,10 +73,15 @@
                          (on-pong [_ _ data]
                            (swap! log conj [:listener/pong data]))
                          (on-error [_ _ ex]
-                           (swap! log conj [:listener/error ex])))}))
+                           (swap! log conj [:listener/error ex]))
+                         wsp/PingListener
+                         (on-ping [_ _ data]
+                           (swap! log conj [:listener/ping data])))}))
           listener (:ring.websocket/listener (handler {}))]
       (wsp/on-pong listener socket :xxx)
+      (wsp/on-ping listener socket :yyy)
       (wsp/on-error listener socket :eee)
       (is (= [[:listener/pong :xxx]
+              [:listener/ping :yyy]
               [:listener/error :eee]]
              @log)))))

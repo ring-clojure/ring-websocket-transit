@@ -14,16 +14,14 @@
 
 (defn- wrap-socket [socket]
   (reify wsp/Socket
-    (-open? [_]
-      (wsp/-open? socket))
-    (-send [_ message]
-      (wsp/-send socket (->transit message)))
-    (-ping [_ data]
-      (wsp/-ping socket data))
-    (-pong [_ data]
-      (wsp/-pong socket data))
-    (-close [_ code reason]
-      (wsp/-close socket code reason))))
+    (-open? [_]             (wsp/-open? socket))
+    (-send [_ message]      (wsp/-send socket (->transit message)))
+    (-ping [_ data]         (wsp/-ping socket data))
+    (-pong [_ data]         (wsp/-pong socket data))
+    (-close [_ code reason] (wsp/-close socket code reason))
+    wsp/AsyncSocket
+    (-send-async [_ message succeed fail]
+      (wsp/-send-async socket (->transit message) succeed fail))))
 
 (defn- wrap-listener [listener]
   (reify wsp/Listener
@@ -36,7 +34,12 @@
     (on-error [_ socket throwable]
       (wsp/on-error listener (wrap-socket socket) throwable))
     (on-close [_ socket code reason]
-      (wsp/on-close listener (wrap-socket socket) code reason))))
+      (wsp/on-close listener (wrap-socket socket) code reason))
+    wsp/PingListener
+    (on-ping [_ socket data]
+      (if (satisfies? wsp/PingListener listener)
+        (wsp/on-ping listener (wrap-socket socket) data)
+        (wsp/-ping socket data)))))
 
 (defn websocket-transit-response [response]
   (if (contains? response :ring.websocket/listener)
