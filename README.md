@@ -1,4 +1,5 @@
-# Ring-WebSocket-Transit
+# Ring-WebSocket-Transit [![Build Status](https://github.com/ring-clojure/ring-websocket-transit/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/ring-clojure/ring-websocket-transit/actions/workflows/test.yml)
+
 
 A Clojure library for using the [Transit][] data format over [Ring's][]
 WebSocket API (currently in beta testing).
