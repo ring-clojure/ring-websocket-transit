@@ -85,21 +85,6 @@
               [:listener/ping :yyy]
               [:listener/error :eee]]
              @log))))
-  (testing "subprotocol header set"
-    (let [handler  (wst/wrap-websocket-transit
-                    (fn [_]
-                      {:ring.websocket/listener (reify wsp/Listener)}))
-          response (handler {})]
-      (is (= "transit+json"
-             (:ring.websocket/protocol response)))))
-  (testing "subprotocol header not overridden"
-    (let [handler  (wst/wrap-websocket-transit
-                    (fn [_]
-                      {:ring.websocket/listener (reify wsp/Listener)
-                       :ring.websocket/protocol "custom"}))
-          response (handler {})]
-      (is (= "custom"
-             (:ring.websocket/protocol response)))))
   (testing "parsing exceptions trigger on-error"
     (let [log      (atom [])
           socket   (reify wsp/Socket)

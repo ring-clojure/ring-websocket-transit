@@ -52,9 +52,7 @@
   are formatted using Transit. See: wrap-websocket-transit."
   [response]
   (if (contains? response :ring.websocket/listener)
-    (-> response
-        (update :ring.websocket/listener wrap-listener)
-        (update :ring.websocket/protocol #(or % "transit+json")))
+    (update response :ring.websocket/listener wrap-listener)
     response))
 
 (defn wrap-websocket-transit
