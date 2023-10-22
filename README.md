@@ -11,11 +11,11 @@ WebSocket API (currently in beta testing).
 
 Add the following dependency to your deps.edn file:
 
-    org.ring-clojure/ring-websocket-transit {:mvn {"0.1.0-beta1"}}
+    org.ring-clojure/ring-websocket-transit {:mvn {"0.1.0-beta2"}}
 
 Or to your Leiningen project file:
 
-    [org.ring-clojure/ring-websocket-transit "0.1.0-beta1"]
+    [org.ring-clojure/ring-websocket-transit "0.1.0-beta2"]
 
 ## Usage
 
